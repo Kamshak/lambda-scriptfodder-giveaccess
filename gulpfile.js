@@ -15,7 +15,7 @@ var lambda_properties = {
 };
 
 gulp.task('clean', function(cb) {
-  return del('./dist');
+  return del(['./dist', 'dist.zip']);
 });
 
 gulp.task('js', function() {

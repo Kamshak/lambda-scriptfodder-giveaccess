@@ -7,6 +7,8 @@ var htmlparser = require("htmlparser2"),
     moment = require('moment'),
     DomUtils = require("domutils");
 
+require('dotenv').load();
+
 Promise.promisifyAll(htmlparser.DomHandler)
 
 var cookie = process.env.SF_COOKIE;
@@ -25,16 +27,20 @@ function giveAccess(script_id, steam_id) {
       method: 'POST',
       form: { steam_id: steam_id }
     }, options )
-  );
+  ).then(function(result) {
+    return result == '{"status": "success"}';
+  });
 }
 
 exports.handler = function(event, context) {
-  giveAccess(event.script_id, event.steam_id)
-  .then(function() {
-    context.succeed(event.script_id);
+  var ids = event.scripts.split(',');
+
+  Promise.map(ids, function(id) {
+    return Promise.join(id, giveAccess(id, event.steam_id));
+  }).then(function(results) {
+    context.succeed(_.zipObject(results));
   })
   .catch(function(e) {
-    console.log(e);
     context.fail(e);
   });
 }
