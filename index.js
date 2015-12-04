@@ -20,6 +20,18 @@ var options = {
     }
 };
 
+function checkPurchased(script_id, steam_id) {
+  return rp(
+    _.extend({
+      uri: 'https://scriptfodder.com/api/scripts/purchases/' + script_id + "?api_key=" + process.env.SF_APIKEY,
+      method: 'GET',
+    }, options )
+  ).then(function(result) {
+    var purchases = JSON.parse(result).purchases;
+    return _.findWhere(purchases, {user_id: steam_id}) != undefined;
+  });
+}
+
 function giveAccess(script_id, steam_id) {
   return rp(
     _.extend({
@@ -36,7 +48,13 @@ exports.handler = function(event, context) {
   var ids = event.scripts.split(',');
 
   Promise.map(ids, function(id) {
-    return Promise.join(id, giveAccess(id, event.steam_id));
+    return checkPurchased(id, event.steam_id)
+    .then(function(purchased) {
+      if (purchased) {
+        return [id, true];
+      }
+      return Promise.join(id, giveAccess(id, event.steam_id));
+    });
   }).then(function(results) {
     context.succeed(_.zipObject(results));
   })
