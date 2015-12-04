@@ -8,3 +8,9 @@ Used to create an Amazon AWS Lambda to upload things. To use:
 
 To package and upload to AWS run 
 gulp
+
+To use call the handler with 
+{
+  scripts: "123,3232,123", //NO SPACES, comma seperated list
+  steam_id: "769423235123234"
+}
